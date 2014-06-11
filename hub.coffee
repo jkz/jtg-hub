@@ -3,11 +3,7 @@ app     = express()
 server  = require('http').Server app
 io      = require('socket.io').listen server
 
-app.use express.static __dirname + '/public'
-
-[_command, _file, port] = process.argv
-
-server.listen port
+server.listen process.env.SOCKET_PORT
 
 events = [
   'broadcast'

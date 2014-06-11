@@ -1,2 +1,2 @@
 require('coffee-script/register');
-require('./hub.coffee');
+require('./hub');
