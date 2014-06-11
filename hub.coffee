@@ -7,8 +7,6 @@ app.use express.static __dirname + '/public'
 
 [_command, _file, port] = process.argv
 
-port ?= 8081
-
 server.listen port
 
 events = [
