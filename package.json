@@ -12,5 +12,9 @@
     "coffee-script": "^1.7.1",
     "express": "^4.4.1",
     "socket.io": "^1.0.4",
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
   }
 }
