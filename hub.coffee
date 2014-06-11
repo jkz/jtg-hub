@@ -3,7 +3,7 @@ app     = express()
 server  = require('http').Server app
 io      = require('socket.io').listen server
 
-server.listen process.env.SOCKET_PORT
+server.listen process.env.PORT ? 8080
 
 events = [
   'broadcast'
