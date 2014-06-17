@@ -19,7 +19,7 @@ history =
 io.sockets.on 'connection', (socket) ->
   for event in events
     do (event) ->
-      socket.on 'init', ->
+      socket.on "#{event}.init", ->
         socket.emit "#{event}.history", history[event]
 
       socket.on event, (payload) ->
