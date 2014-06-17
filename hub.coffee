@@ -22,6 +22,6 @@ io.sockets.on 'connection', (socket) ->
       socket.on 'init', ->
         socket.emit "history.#{event}", history[event]
 
-      socket.on event, (data) ->
-        io.sockets.emit event, data
-        history[event] = [data, history[event]...][0..historySize]
+      socket.on event, (payload) ->
+        io.sockets.emit event, payload
+        history[event] = [payload, history[event]...][0..historySize]
