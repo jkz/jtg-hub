@@ -3,7 +3,10 @@ app     = express()
 server  = require('http').Server app
 io      = require('socket.io').listen server
 
-server.listen process.env.PORT ? 8080
+port = process.env.PORT ? 8080
+
+server.listen port, ->
+  console.log "http://localhost:#{port}"
 
 historySize = 100
 
@@ -16,11 +19,19 @@ history =
   chat: []
   location: []
 
+for event in events
+  do (event) ->
+    app.get "#{event}", (req, res) ->
+      res.json history: history[event]
+
 io.sockets.on 'connection', (socket) ->
   for event in events
     do (event) ->
       socket.on "#{event}.init", ->
         socket.emit "#{event}.history", history[event]
+
+      app.get "#{event}", (req, res) ->
+        res.json history: history[event]
 
       socket.on event, (payload) ->
         io.sockets.emit event, payload
