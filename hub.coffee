@@ -30,9 +30,13 @@ io.sockets.on 'connection', (socket) ->
       socket.on "#{event}.init", ->
         socket.emit "#{event}.history", history[event]
 
-      app.get "#{event}", (req, res) ->
+      app.get event, (req, res) ->
         res.json history: history[event]
 
       socket.on event, (payload) ->
         io.sockets.emit event, payload
-        history[event] = [payload, history[event]...][0..historySize]
+        history[event] = [history[event]..., payload][0..historySize]
+
+app.get '/hi', (req, res) ->
+  console.log 'hi'
+  res.send 'Success!'
