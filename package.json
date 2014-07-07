@@ -2,7 +2,7 @@
   "name": "jtg.hub",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,5 +16,9 @@
   "engines": {
     "node": "0.10.x",
     "npm": "1.2.x"
+  },
+  "devDependencies": {
+    "gulp": "^3.8.2",
+    "nodemon": "^1.2.0"
   }
 }

@@ -11,10 +11,21 @@ app.get '/', (req, res) ->
 server.listen port, ->
   console.log 'listening', port
 
+historySize = 100
+
 events = [
-  'broadcast'
+  'chat'
   'location'
 ]
+
+history =
+  chat: []
+  location: []
+
+for event in events
+  do (event) ->
+    app.get "#{event}", (req, res) ->
+      res.json history: history[event]
 
 io.sockets.on 'connection', (socket) ->
   for event in events
@@ -22,3 +33,16 @@ io.sockets.on 'connection', (socket) ->
       socket.on event, (data) ->
         io.sockets.emit event, data
 
+      socket.on "#{event}.init", ->
+        socket.emit "#{event}.history", history[event]
+
+      app.get event, (req, res) ->
+        res.json history: history[event]
+
+      socket.on event, (payload) ->
+        io.sockets.emit event, payload
+        history[event] = [history[event]..., payload][0..historySize]
+
+app.get '/hi', (req, res) ->
+  console.log 'hi'
+  res.send 'Success!'
