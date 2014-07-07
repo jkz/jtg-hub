@@ -3,7 +3,13 @@ app     = express()
 server  = require('http').Server app
 io      = require('socket.io').listen server
 
-server.listen process.env.PORT ? 8080
+port = process.env.PORT ? 8080
+
+app.get '/', (req, res) ->
+  res.send "Nothing to see here"
+
+server.listen port, ->
+  console.log 'listening', port
 
 events = [
   'broadcast'
@@ -13,5 +19,6 @@ events = [
 io.sockets.on 'connection', (socket) ->
   for event in events
     do (event) ->
-      socket.on event, (args...) ->
-        io.sockets.emit event, args...
+      socket.on event, (data) ->
+        io.sockets.emit event, data
+
