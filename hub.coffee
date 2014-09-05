@@ -1,15 +1,28 @@
-express = require('express')
-app     = express()
+app     = require('express')()
 server  = require('http').Server app
 io      = require('socket.io').listen server
 request = require('request')
+feeds   = require('feeds')
 
 port = process.env.PORT ? 8080
+
+app.use feeds.routes
 
 server.listen port, ->
   console.log "http://localhost:#{port}"
 
-historySize = 100
+
+chat = feeds.models.create name: 'chats'
+
+chat.validate = (message) ->
+  throw "No message" unless message
+
+location = feeds.models.create name: 'locations', type: 'json', timeout: 120
+
+location.validate = ({latitude, longitude}) ->
+  throw "No latitude" unless location.latitude
+  throw "No longitude" unless location.longitude
+  throw "No user" unless location.user
 
 identify = (token, done) ->
   request
@@ -20,46 +33,14 @@ identify = (token, done) ->
   , (err, res, body) ->
     done err, body
 
-events = [
-  'chat'
-  #'location'
-]
-
-history =
-  chat: []
-  location: []
-
-for event in events
-  do (event) ->
-    app.get "#{event}", (req, res) ->
-      res.json history: history[event]
-
 io.sockets.on 'connection', (socket) ->
-  for event in events
-    do (event) ->
-      socket.on "#{event}.init", ->
-        socket.emit "#{event}.history", history[event]
-
-      app.get event, (req, res) ->
-        res.json history: history[event]
-
-      socket.on event, (payload) ->
-        io.sockets.emit event, payload
-        history[event] = [history[event]..., payload][0..historySize]
-
   socket.on 'auth', ({token}) ->
     identify token, (err, user) ->
-      console.log "auth", err, user
       socket.user = user
 
   socket.on 'location', (coords) ->
     {user} = socket
-    return console.log "NO AUTH", coords unless user
-    console.log "LOCATION", {coords, user}
-    io.sockets.emit 'location', {coords, user}
+    location.add {user, coords}
 
-  socket.emit 'auth'
-
-app.get '/hi', (req, res) ->
-  console.log 'hi'
-  res.send 'Success!'
+  socket.on 'chat', (message) ->
+    location.add message
