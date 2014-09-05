@@ -10,7 +10,7 @@ port = process.env.PORT ? 8080
 app.use feeds.routes
 
 server.listen port, ->
-  console.log "http://localhost:#{port}"
+  console.log 'listening', port
 
 
 chat = feeds.models.create name: 'chats'
