@@ -3,6 +3,7 @@ server  = require('http').Server app
 io      = require('socket.io').listen server
 request = require('request')
 feeds   = require('feeds')
+github  = require('./github').feed
 
 port = process.env.PORT ? 8080
 
@@ -51,7 +52,6 @@ io.sockets.on 'connection', (socket) ->
     location
       .range()
       .then (history) ->
-        console.log {history}
         socket.emit 'location.history', history
       .catch (err) ->
         console.log {err}
@@ -65,11 +65,22 @@ io.sockets.on 'connection', (socket) ->
     chat
       .range()
       .then (history) ->
-        console.log {history}
         socket.emit 'chat.history', history
       .catch (err) ->
         console.log {err}
 
+  socket.on 'github.init', ->
+    console.log 'github.init'
+    github
+      .range()
+      .then (history) ->
+        console.log {history}
+        socket.emit 'github.history', history
+      .catch (err) ->
+        console.log {err}
+
+  github.sub.on 'entry', ({entry}) ->
+    socket.emit 'github', entry
 
   chat.sub.on 'entry', ({entry}) ->
     socket.emit 'chat', entry
