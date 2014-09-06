@@ -45,8 +45,8 @@ socketize = (feed, callback) ->
 
     socket.emit 'ready'
 
-  feed.on 'entry', ({entry}) ->
-    namespace.emit 'entry', entry
+  feed.on 'data', ({render}) ->
+    namespace.emit 'data', render
 
   namespace
 
@@ -105,24 +105,24 @@ socketize location, (socket) ->
 github = require('./feeds/github').feeds.events
 socketize github
 
+## Twitter
+
+twitter = require('./feeds/twitter').feeds.user
+socketize twitter
+
 # Social
 class SocialFeed extends feeds.models.ComboFeed
   deserialize: JSON.parse
-  envelope: (id, data) ->
+
+  render: ({id, data, timestamp}) ->
     [_, provider, model, id] = id.split '/'
-    console.log {provider, model, id, data}
-    {provider, model, id, data}
-
-  find: (id) ->
-    super(id).then (entry) =>
-      @envelope id, entry
-
-  entries: (ids) ->
-    super(ids).then (entries) =>
-      @envelope ids[i], entry for entry, i in entries
+    console.log {provider, model, id, data, timestamp}
+    {provider, model, id, data, timestamp}
 
 social = SocialFeed.create 'social'
 
 social.combine github
+social.combine twitter
+
 socketize social
 

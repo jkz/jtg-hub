@@ -36,7 +36,7 @@ lastModified = null
 
 do harvest = ->
   api.events.getFromUser
-    user: 'jessethegame'
+    user: conf.github.user
     per_page: conf.github.per_page
     headers:
       'If-Modified-Since': lastModified
