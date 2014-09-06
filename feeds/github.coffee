@@ -46,8 +46,6 @@ do harvest = ->
     lastModified = data.meta['last-modified']
 
     for event in data
-      console.log {event}
-
       feed = switch event.type
         when 'IssuesEvent' then feeds.issue
         when 'CreateEvent' then feeds.create
