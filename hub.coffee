@@ -3,7 +3,7 @@ server  = require('http').Server app
 io      = require('socket.io').listen server
 request = require('request')
 feeds   = require('feeds')
-github  = require('./github').feed
+github  = require('./feeds/github').feeds.events
 
 port = process.env.PORT ? 8080
 
@@ -13,12 +13,12 @@ server.listen port, ->
   console.log 'listening', port
 
 
-chat = feeds.models.create name: 'chats'
+chat = feeds.models.Feed.create 'chats'
 
 chat.validate = (message) ->
   throw "No message" unless message
 
-location = feeds.models.create name: 'locations', type: 'json', timeout: 120
+location = feeds.models.JSONFeed.create 'locations', timeout: 120
 
 location.validate = ({latitude, longitude}) ->
   throw "No latitude" unless location.latitude
