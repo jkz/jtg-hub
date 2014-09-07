@@ -1,5 +1,5 @@
 facebook = require 'facebook'
-{JSONFeed, ComboFeed} = require 'feeds'
+{JSONFeed, ComboFeed} = require 'feeds/feeds/models'
 
 feeds =
   like: JSONFeed.create 'like'

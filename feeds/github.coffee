@@ -1,24 +1,26 @@
 Github = require 'github'
-
-{JSONFeed, ComboFeed} = require 'feeds/feeds/models'
-
+{models} = require 'feeds'
 conf = require '../conf'
 
-class GithubFeed extends JSONFeed
-  @prefix: '/github'
+class Feed extends models.JSONFeed
+  prefix: '/github'
 
   generateId: ({id}) ->
     id
   generateTimestamp: ({created_at}) ->
     new Date(created_at).getTime()
 
-feeds =
-  create: GithubFeed.create 'create'
-  issue: GithubFeed.create 'issue'
-  watch: GithubFeed.create 'watch'
-  push: GithubFeed.create 'push'
+class Aggregator extends models.Aggregator
+  prefix: '/github'
+  deserialize: JSON.parse
 
-  events: ComboFeed.create 'github', deserialize: JSON.parse
+feeds =
+  create: Feed.create 'create'
+  issue: Feed.create 'issue'
+  watch: Feed.create 'watch'
+  push: Feed.create 'push'
+
+  events: Aggregator.create 'events', deserialize: JSON.parse
 
 feeds.events.combine feeds.create
 feeds.events.combine feeds.issue
@@ -56,4 +58,4 @@ do harvest = ->
 
       feed.add event
 
-module.exports = {feeds, api}
+module.exports = {api, feeds, Feed, Aggregator}

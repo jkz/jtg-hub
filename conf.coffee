@@ -19,4 +19,10 @@ module.exports =
     accessToken:
       key: process.env.TWITTER_ACCESS_TOKEN_KEY
       secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
+  soundcloud:
+    key: process.env.SOUNDCLOUD_CLIENT_KEY
+    secret: process.env.SOUNDCLOUD_CLIENT_SECRET
+    token: process.env.SOUNDCLOUD_ACCESS_TOKEN
+    redirect_uri: process.env.SOUNDCLOUD_REDIRECT_URI
+
 

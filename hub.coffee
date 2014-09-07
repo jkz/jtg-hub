@@ -1,4 +1,5 @@
-app     = require('express')()
+express = require('express')
+app     = express()
 server  = require('http').Server app
 io      = require('socket.io').listen server
 request = require('request')
@@ -8,7 +9,7 @@ conf = require './conf'
 
 port = process.env.PORT ? 8080
 
-app.use feeds.routes
+# app.use feeds.routes
 
 server.listen port, ->
   console.log 'listening', port
@@ -20,6 +21,24 @@ anonymous =
 # Allow multiple socket.io instances to be synced
 ioRedis = require 'socket.io-redis'
 io.adapter ioRedis conf.redis.url
+
+# Add urls
+routize = (feed) ->
+  {resource, middleware} = feeds
+
+  console.log routize: feed.key
+
+  routes = express()
+  routes.get '/', [
+    middleware.pagination.range
+  ], resource.show
+  routes.post '/', resource.add
+  routes.get '/:entry', resource.find
+
+  app.use feed.key, (req, res, next) ->
+    req.feed = feed
+    next()
+  app.use feed.key, routes
 
 # Expose a non-interactive feed
 socketize = (feed, callback) ->
@@ -99,30 +118,17 @@ socketize location, (socket) ->
     return unless {user} = socket
     location.add {user, coords}
 
+stories = require('./feeds/stories').Aggregator.create 'stories'
 
-## Github
+socketize stories
+routize stories
 
-github = require('./feeds/github').feeds.events
-socketize github
+expose = (feed, callback) ->
+  routize feed
+  socketize feed, callback
+  stories.combine feed
 
-## Twitter
-
-twitter = require('./feeds/twitter').feeds.user
-socketize twitter
-
-# Social
-class SocialFeed extends feeds.models.ComboFeed
-  deserialize: JSON.parse
-
-  render: ({id, data, timestamp}) ->
-    [_, provider, model, id] = id.split '/'
-    console.log {provider, model, id, data, timestamp}
-    {provider, model, id, data, timestamp}
-
-social = SocialFeed.create 'social'
-
-social.combine github
-social.combine twitter
-
-socketize social
+expose require('./feeds/github').feeds.events
+expose require('./feeds/twitter').feeds.user
+expose require('./feeds/soundcloud').feeds.activities
 
