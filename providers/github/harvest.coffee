@@ -7,6 +7,8 @@ feed = require './feed'
 
 headerRegex = /<([^>]+)>;\ rel="([^"]+)"/g
 
+rateLimit = true
+
 api =
   parseLinkHeader: (header) ->
     links = {}
@@ -81,9 +83,11 @@ rewards = ->
       for stargazer in stargazers
         feed.user(stargazer.id).stargazers.add stargazer
 
+  # Stargaze on existing repos
   api.all "/users/#{conf.host}/repos", (repos) ->
     stargaze repo.fullName for repo in repos
 
+  # Stargaze on new repos
   feed.host(conf.host).CreateEvent.on 'data', (data) ->
     stargaze data.fullName
 
