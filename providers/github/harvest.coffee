@@ -5,7 +5,19 @@ feed = require './feed'
 
 {per_page} = conf
 
+headerRegex = /<([^>]+)>;\ rel="([^"]+)"/g
+
 api =
+  parseLinkHeader: (header) ->
+    links = {}
+    return links unless header
+    for link in header.split ','
+      match = headerRegex.exec link
+      continue unless match
+      [_, href, rel] = match
+      links[rel] = href
+    links
+
   options: (path, qs={}) ->
     json = true
     url = 'https://api.github.com' + path
@@ -18,8 +30,21 @@ api =
 
     {url, qs, json, headers}
 
-  get:  (args..., callback) ->
-    request @options(args...), callback
+  get: (args..., callback) ->
+    request @options(args...), (err, response, body) ->
+      api.parseLinkHeader response.headers.link
+      callback err, response, body
+
+
+  all: (args..., callback) ->
+    wrappedCallback = (err, {headers}, body) ->
+      callback(body)
+
+      {next} = api.parseLinkHeader headers.link
+
+      request url: next, wrappedCallback if next
+
+    request @options(args...), wrappedCallback
 
   poll: (args..., callback) ->
     options = @options args...
@@ -31,13 +56,9 @@ api =
 
         callback(body, headers)
 
-      console.log {headers}
-
       seconds = parseInt(headers['x-poll-interval'])
       seconds = conf.interval if isNaN seconds
       seconds = 10 if isNaN seconds
-
-      console.log {seconds}
 
       setTimeout iter, 1000 * seconds
 
@@ -55,10 +76,16 @@ rewards = ->
     for follower in followers
       feed.user(follower.id).followers.add follower
 
-  api.get "/users/#{conf.host}/repos", (err, repos) ->
-    for repo in repos
-      api.poll "/repos/#{repo.fullName}/stargazers", {per_page}, (stargazers) ->
-        for stargazer in stargazers
-          feed.user(stargazer.id).stargazers.add stargazer
+  stargaze = (repo) ->
+    api.poll "/repos/#{repo}/stargazers", {per_page}, (stargazers) ->
+      for stargazer in stargazers
+        feed.user(stargazer.id).stargazers.add stargazer
+
+  api.all "/users/#{conf.host}/repos", (repos) ->
+    stargaze repo.fullName for repo in repos
+
+  feed.host(conf.host).CreateEvent.on 'data', (data) ->
+    stargaze data.fullName
+
 
 module.exports = {api, stories, rewards}
