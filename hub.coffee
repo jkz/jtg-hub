@@ -132,3 +132,5 @@ expose require('./feeds/github').feeds.events
 expose require('./feeds/twitter').feeds.user
 expose require('./feeds/soundcloud').feeds.activities
 
+feeds.rewards.on 'data', (reward) ->
+  io.of("/users/#{reward.user}").emit 'reward', reward
