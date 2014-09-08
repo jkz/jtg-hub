@@ -26,7 +26,9 @@ io.adapter ioRedis conf.redis.url
 routize = (feed) ->
   {resource, middleware} = feeds
 
-  console.log routize: feed.key
+  path = feed.key
+
+  console.log routize: path
 
   routes = express()
   routes.get '/', [
@@ -35,15 +37,16 @@ routize = (feed) ->
   routes.post '/', resource.add
   routes.get '/:entry', resource.find
 
-  app.use feed.key, (req, res, next) ->
+  app.use path, (req, res, next) ->
     req.feed = feed
     next()
-  app.use feed.key, routes
+  app.use path, routes
 
 # Expose a non-interactive feed
 socketize = (feed, callback) ->
   namespace = io.of(feed.key)
-  console.log namespace: feed.key
+
+  console.log socketize: feed.key
 
   namespace.on 'connection', (socket) ->
     log = (args...) ->
@@ -70,6 +73,7 @@ socketize = (feed, callback) ->
   namespace
 
 
+
 ## Authentication
 
 identify = (token, done) ->
@@ -89,8 +93,12 @@ io.on 'connection', (socket) ->
       socket.user = {name, image}
       console.log {name}
 
+      socket.emit 'login', user
+
   socket.on 'logout', ->
     socket.user = null
+
+
 
 ## Chat
 
@@ -103,6 +111,8 @@ socketize chat, (socket) ->
     timestamp = new Date().getTime()
     user = socket.user ? anonymous
     chat.add {message, user, timestamp}
+
+
 
 ## Location
 
@@ -118,19 +128,26 @@ socketize location, (socket) ->
     return unless {user} = socket
     location.add {user, coords}
 
-stories = require('./feeds/stories').Aggregator.create 'stories'
 
-socketize stories
-routize stories
+
+
+# Feeds
 
 expose = (feed, callback) ->
   routize feed
   socketize feed, callback
-  stories.combine feed
 
-expose require('./feeds/github').feeds.events
-expose require('./feeds/twitter').feeds.user
-expose require('./feeds/soundcloud').feeds.activities
+expose feed for _, feed of require('./feed').host()
 
-feeds.rewards.on 'data', (reward) ->
-  io.of("/users/#{reward.user}").emit 'reward', reward
+
+
+# Harvest
+
+require('./harvest').all()
+
+
+# Rewards
+
+# feeds.rewards.on 'data', (reward) ->
+#   io.of("/users/#{reward.user}").emit 'reward', reward
+
