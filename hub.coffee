@@ -87,13 +87,19 @@ identify = (token, done) ->
     done err, user
 
 io.on 'connection', (socket) ->
-  socket.on 'auth', ({token}) ->
-    identify token, (err, user) ->
-      {name, image} = user
-      socket.user = {name, image}
-      console.log {name}
+  # socket.on 'auth', ({token}) ->
+  #   identify token, (err, user) ->
+  #     {name, image} = user
+  #     socket.user = {name, image}
+  #     console.log {name}
 
-      socket.emit 'login', user
+  #     socket.emit 'login', user
+
+  socket.on 'login', (user) ->
+    # socket.user = user
+    console.log "LOGIN", {user}
+    anonymous = user
+    socket.emit 'login', user
 
   socket.on 'logout', ->
     socket.user = null
@@ -116,19 +122,29 @@ socketize chat, (socket) ->
 
 ## Location
 
-location = feeds.models.JSONFeed.create 'location',
-  timeout: 120
-  validate: ({latitude, longitude}) ->
-    throw "No latitude" unless location.latitude
-    throw "No longitude" unless location.longitude
-    throw "No user" unless location.user
+# location = feeds.models.JSONFeed.create 'location',
+#   timeout: 120
+#   validate: ({latitude, longitude, user}) ->
+#     throw "No latitude" unless latitude
+#     throw "No longitude" unless longitude
+#     throw "No user" unless user
+#
+# socketize location, (socket) ->
+#   socket.on 'location', (coords) ->
+#     return unless {user} = socket
+#     location.add {user, coords}
 
-socketize location, (socket) ->
-  socket.on 'location', (coords) ->
-    return unless {user} = socket
-    location.add {user, coords}
+lastLocation = user: anonymous, coords: {}
 
+io.of('/location')
+  .on 'connection', (socket) ->
+    socket.on 'location', (coords) ->
+      user = socket.user ? anonymous
+      lastLocation = {coords, user}
+      # return unless {user} = socket
+      io.of('/location').emit 'location', {user, coords}
 
+    socket.emit 'location', lastLocation
 
 
 # Feeds

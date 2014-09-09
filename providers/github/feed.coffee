@@ -33,8 +33,8 @@ user = (id) ->
   prefix = PREFIX + '/users/' + id
 
   feeds =
-    followers: Feed.create 'followers', {prefix}
-    stargazers: Feed.create 'stargazers', {prefix}
+    follow: Feed.create 'followers', {prefix}
+    stargaze: Feed.create 'stargazers', {prefix}
 
   all = Aggregator.create 'all', {prefix}
   all.combine feed for _, feed of feeds

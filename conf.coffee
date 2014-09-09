@@ -35,5 +35,21 @@ module.exports =
     token: process.env.SOUNDCLOUD_ACCESS_TOKEN
     redirect_uri: process.env.SOUNDCLOUD_REDIRECT_URI
 
+  rewards:
+    soundcloud:
+      'track': 100
+      'track-sharing': 100
+      'comment': 100
+      'favoriting': 100
+    twitter:
+      follow: 150
+      unfollow: -150
+      favorite: 100
+      unfavorite: -100
+    github:
+      stargaze: 100
+      follow: 150
+
+
 
 

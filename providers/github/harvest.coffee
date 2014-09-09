@@ -1,4 +1,4 @@
-request = require 'request'
+_request = require 'request'
 
 conf  = require './conf'
 feed = require './feed'
@@ -7,10 +7,18 @@ feed = require './feed'
 
 headerRegex = /<([^>]+)>;\ rel="([^"]+)"/g
 
+# TODO this is not actually used anywhere
 rateLimit = true
+
+request = (options, callback) ->
+  _request options, (err, response, body) ->
+    return err if err
+    rateLimit = parseInt response.headers['x-ratelimit-remaining']
+    callback err, response, body
 
 api =
   parseLinkHeader: (header) ->
+    # Yuck...
     links = {}
     return links unless header
     for link in header.split ','
@@ -39,14 +47,18 @@ api =
 
 
   all: (args..., callback) ->
+    {url, qs, header, json} = options = @options(args...)
+
     wrappedCallback = (err, {headers}, body) ->
       callback(body)
 
-      {next} = api.parseLinkHeader headers.link
+      url = {next} = api.parseLinkHeader headers.link
 
-      request url: next, wrappedCallback if next
+      options = {url, headers, json}
 
-    request @options(args...), wrappedCallback
+      request options, wrappedCallback if next
+
+    request options, wrappedCallback
 
   poll: (args..., callback) ->
     options = @options args...
@@ -76,20 +88,23 @@ stories = ->
 rewards = ->
   api.poll "/users/#{conf.host}/followers", {per_page}, (followers) ->
     for follower in followers
-      feed.user(follower.id).followers.add follower
+      feed.user(follower.id).follow.add follower
 
   stargaze = (repo) ->
+    console.log 'stargaze', repo
     api.poll "/repos/#{repo}/stargazers", {per_page}, (stargazers) ->
       for stargazer in stargazers
-        feed.user(stargazer.id).stargazers.add stargazer
+        feed.user(stargazer.id).stargaze.add stargazer
 
   # Stargaze on existing repos
   api.all "/users/#{conf.host}/repos", (repos) ->
-    stargaze repo.fullName for repo in repos
+    console.log {repos}
+    stargaze repo.full_name for repo in repos
 
   # Stargaze on new repos
   feed.host(conf.host).CreateEvent.on 'data', (data) ->
-    stargaze data.fullName
+    console.log "CreateEvent", data.type
+    stargaze data.full_name
 
 
 module.exports = {api, stories, rewards}
