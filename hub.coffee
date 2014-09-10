@@ -113,7 +113,9 @@ chat = feeds.models.JSONFeed.create 'chat',
     throw "No message" unless message
 
 socketize chat, (socket) ->
+  console.log "chat", socket.user
   socket.on 'chat', (message) ->
+    console.log 'chat', {message}
     timestamp = new Date().getTime()
     user = socket.user ? anonymous
     chat.add {message, user, timestamp}

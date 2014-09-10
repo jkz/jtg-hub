@@ -91,19 +91,16 @@ rewards = ->
       feed.user(follower.id).follow.add follower
 
   stargaze = (repo) ->
-    console.log 'stargaze', repo
     api.poll "/repos/#{repo}/stargazers", {per_page}, (stargazers) ->
       for stargazer in stargazers
         feed.user(stargazer.id).stargaze.add stargazer
 
   # Stargaze on existing repos
   api.all "/users/#{conf.host}/repos", (repos) ->
-    console.log {repos}
     stargaze repo.full_name for repo in repos
 
   # Stargaze on new repos
   feed.host(conf.host).CreateEvent.on 'data', (data) ->
-    console.log "CreateEvent", data.type
     stargaze data.full_name
 
 

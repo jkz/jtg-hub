@@ -12,9 +12,7 @@ class Aggregator extends models.Aggregator
   deserialize: JSON.parse
 
   validate: (data) ->
-    console.log "STORIES VALIDATING", {data}
     true
-
 
   render: ({id, data, timestamp}) =>
     # The id is of form /:provider[/:owner/:owner_id]/:model/:id
