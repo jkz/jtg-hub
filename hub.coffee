@@ -4,6 +4,8 @@ server  = require('http').Server app
 io      = require('socket.io').listen server
 request = require('request')
 feeds   = require('feeds')
+jwt     = require('jwt-simple')
+
 bodyParser = require('body-parser')
 
 app.use bodyParser.json()
@@ -79,14 +81,17 @@ socketize = (feed, callback) ->
 ## Authentication
 
 identify = (token, done) ->
-  request
-    url: 'http://localhost:3000/users/me'
-    headers:
-      Authorization: token
-    json: true
-  , (err, res, body) ->
-    {user} = body
-    done err, user
+  user = jwt.decode token, conf.jwt.secret, conf.jwt.algorithm
+  console.log {user}
+  user
+  # request
+  #   url: 'http://localhost:3000/users/me'
+  #   headers:
+  #     Authorization: token
+  #   json: true
+  # , (err, res, body) ->
+  #   {user} = body
+  #   done err, user
 
 io.on 'connection', (socket) ->
   # socket.on 'auth', ({token}) ->

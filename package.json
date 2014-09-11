@@ -12,6 +12,8 @@
     "coffee-script": "^1.7.1",
     "dotenv": "^0.4.0",
     "express": "^4.4.1",
+    "install": "^0.1.7",
+    "jwt-simple": "^0.2.0",
     "lodash": "^2.4.1",
     "request": "^2.37.0",
     "request-promise": "^0.1.2",

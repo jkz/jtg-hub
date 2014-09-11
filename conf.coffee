@@ -5,6 +5,10 @@ module.exports = conf =
   env: process.env.NODE_ENV ? 'development'
   port: process.env.PORT
 
+  jwt:
+    secret: process.env.JWT_SECRET
+    algorithm: process.env.JWT_ALGORITHM
+
   providers: ['github', 'twitter', 'soundcloud']
 
   stories:
