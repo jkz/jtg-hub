@@ -36,7 +36,9 @@ host = (id) ->
 
   feeds
 
+players = Aggregator.create 'players'
+
 user = (id) ->
   null
 
-module.exports = {host, user, Feed, Aggregator}
+module.exports = {host, user, players, Feed, Aggregator}

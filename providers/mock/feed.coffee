@@ -1,14 +1,9 @@
 {models} = require 'feeds'
 
-PREFIX = '/github'
+PREFIX = '/mock'
 
 class Feed extends models.JSONFeed
   prefix: PREFIX
-
-  generateId: ({id}) ->
-    id
-  generateTimestamp: ({created_at}) ->
-    new Date(created_at).getTime()
 
 class Aggregator extends models.Aggregator
   prefix: PREFIX
@@ -18,10 +13,8 @@ host = (id) ->
   prefix = PREFIX + '/hosts/' + id
 
   feeds =
-    CreateEvent: Feed.create 'create', {prefix}
-    IssuesEvent: Feed.create 'issue', {prefix}
-    WatchEvent: Feed.create 'watch', {prefix}
-    PushEvent: Feed.create 'push', {prefix}
+    foo: Feed.create 'foo', {prefix}
+    bar: Feed.create 'bar', {prefix}
 
   all = Aggregator.create 'all', {prefix}
   all.combine feed for _, feed of feeds
@@ -35,8 +28,8 @@ user = (id) ->
   prefix = PREFIX + '/users/' + id
 
   feeds =
-    follow: Feed.create 'followers', {prefix}
-    stargaze: Feed.create 'stargazers', {prefix}
+    foo: Feed.create 'foo', {prefix}
+    bar: Feed.create 'bar', {prefix}
 
   all = Aggregator.create 'all', {prefix}
   all.combine feed for _, feed of feeds

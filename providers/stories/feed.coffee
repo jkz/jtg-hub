@@ -25,7 +25,6 @@ host = ->
 
   for provider in providers
     host = conf[provider].host
-    console.log {provider, host}
     feed = require("../#{provider}/feed").host(host).all
 
     do (provider) ->
@@ -37,9 +36,13 @@ host = ->
 
   feeds
 
+players = Aggregator.create 'players'
+
 user = (id) ->
   feeds =
     all: Aggregator.create 'all', prefix: PREFIX + '/users/' + id
+
+  players.combine feeds.all
 
   new User(id)
     .accounts()
@@ -52,4 +55,4 @@ user = (id) ->
 
   feeds
 
-module.exports = {user, host, Aggregator}
+module.exports = {user, host, players, Aggregator}

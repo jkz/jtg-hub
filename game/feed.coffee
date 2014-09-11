@@ -1,4 +1,4 @@
-stories = require './providers/stories/feed'
+stories = require '../providers/stories/feed'
 
 host = ->
   stories.host()

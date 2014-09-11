@@ -4,28 +4,41 @@ events = require 'events'
 db = require '../db'
 
 class User extends events.EventEmitter
-  @create: (name, options) ->
-    null
+  @emitter: new events.EventEmitter
 
-  constructor: (@name, options) ->
+  @cache: {}
+
+  @create: (id, options) =>
+    return @cache[id] if @cache[id]
+    @cache[id] = new this(id, options)
+    @emitter.emit 'new', @cache[id]
+
+  prefix: "/users"
+
+  constructor: (@id, options={}) ->
     for key, val of options
       this[key] = val
 
     @db ?= db
-    @key ?= @prefix + @name
+    @key ?= "#{@prefix ? ''}/#{@id}"
     @transactionsKey ?= @key + '/transactions'
-    @accountKey ?= @key + '/accounts'
+    @accountsKey ?= @key + '/accounts'
 
   accounts: =>
-    @db.hgetall @accountKey
-      .then (accounts) ->
-        {provider, id} for provider, id of accounts
+    @db.hgetall(@accountKey).then (accounts) ->
+      require('./Account').create provider, id for provider, id of accounts
 
-  connectAccount: (provider, id) =>
-    @db.hset @accountKey, provider, id
+  account: (provider) =>
+    @db.hget(provider).then (id) ->
+      throw "No linked #{provider} account" unless id
+      require('./Account').create provider, id
 
-  disconnectAccount: (provider) =>
-    @db.hdel @accountKey, provider
+  link: (provider, id) =>
+    require('./Account').create(provider, id).link(@id)
+
+  unlink: (provider) =>
+    @account(provider).then (account) ->
+      account.unlink()
 
   balance: =>
     @db.hvals @transactionsKey
@@ -35,14 +48,21 @@ class User extends events.EventEmitter
         sum
 
   # A transaction has a positive or negative value and is
-  # related to a redis key
-  transaction: (key, value, data) =>
-    @db.hsetnx @transactionsKey, key, value
+  # related to a reference (redis key)
+  transaction: ({ref, value, data}) =>
+    @db.hsetnx @transactionsKey, ref, value
       .then parseInt
-      .then (exists) =>
-        throw "Existing transaction" if exists
+      .then (isNew) =>
+        throw "Existing transaction" unless isNew
       .then =>
-        data or @db.get key
+        data or @db.get ref
+      # all([
+      #   @db.get ref
+      #   @balance
+      # ]).then (data, balance)
       .then (data) =>
-        @emit 'transactions', data
+        @emit 'data',
+          type: 'transaction'
+          data: {ref, value, data}
 
+module.exports = User

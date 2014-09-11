@@ -1,7 +1,8 @@
 dotenv = require 'dotenv'
 dotenv.load()
 
-module.exports =
+module.exports = conf =
+  env: process.env.NODE_ENV ? 'development'
   port: process.env.PORT
 
   providers: ['github', 'twitter', 'soundcloud']
@@ -50,6 +51,10 @@ module.exports =
       stargaze: 100
       follow: 150
 
-
-
-
+if conf.env == 'development'
+  conf.providers.push 'mock'
+  conf.mock =
+    host: 'jessethegame'
+  conf.rewards.mock =
+    foo: 100
+    bar: -50

@@ -28,6 +28,8 @@ host = (id) ->
 
   feeds
 
+players = Aggregator.create 'players'
+
 user = (id) ->
   prefix = PREFIX + '/users/' + id
 
@@ -41,6 +43,8 @@ user = (id) ->
   all.combine feed for _, feed of feeds
   feeds.all = all
 
+  players.combine all
+
   feeds
 
-module.exports = {host, user, Feed, Aggregator}
+module.exports = {host, user, players, Feed, Aggregator}

@@ -4,10 +4,16 @@ server  = require('http').Server app
 io      = require('socket.io').listen server
 request = require('request')
 feeds   = require('feeds')
+bodyParser = require('body-parser')
+
+app.use bodyParser.json()
 
 conf = require './conf'
 
 port = process.env.PORT ? 8080
+
+# TODO for now to suppress the message
+process.setMaxListeners(0)
 
 # app.use feeds.routes
 
@@ -28,8 +34,6 @@ routize = (feed) ->
 
   path = feed.key
 
-  console.log routize: path
-
   routes = express()
   routes.get '/', [
     middleware.pagination.range
@@ -45,8 +49,6 @@ routize = (feed) ->
 # Expose a non-interactive feed
 socketize = (feed, callback) ->
   namespace = io.of(feed.key)
-
-  console.log socketize: feed.key
 
   namespace.on 'connection', (socket) ->
     log = (args...) ->
@@ -149,23 +151,64 @@ io.of('/location')
     socket.emit 'location', lastLocation
 
 
+# Users
+{User, Account} = require './models'
+
+io.of('/users').on 'connection', (socket) ->
+  console.log "JOIN USERS NAMESPACE"
+  socket.on 'join', ({uid}) ->
+    console.log "JOIN USERS ROOM", {uid}
+    socket.join uid
+  socket.on 'leave', ({uid}) ->
+    console.log "LEAVE USERS ROOM", {uid}
+    socket.leave uid
+
+User.emitter.on 'new', (user) ->
+  uid = user.id
+  user.on 'data', ({type, data}) ->
+    console.log 'user', {uid, type, data}
+    io.of('/users').to(uid).emit 'data', {uid, type, data}
+
+
+USER_ID = 3
+USER = User.create(USER_ID)
+ACCOUNTS =
+  GITHUB:     Account.create('github', 'jessethegame')
+  TWITTER:    Account.create('twitter', 'jessethegame')
+  SOUNDCLOUD: Account.create('soundcloud', 'jessethegame')
+  FACEBOOK:   Account.create('facebook', 'jessethegame')
+  MOCK:       Account.create('mock', 'jessethegame')
+
+acc.link USER_ID for _, acc of ACCOUNTS
+
+
 # Feeds
 
 expose = (feed, callback) ->
   routize feed
   socketize feed, callback
 
-expose feed for _, feed of require('./feed').host()
-
+expose feed for _, feed of require('./game/feed').host()
 
 
 # Harvest
 
-require('./harvest').all()
+harvest = require './game/harvest'
 
+# harvest 'github'
+# harvest 'twitter'
+# harvest 'soundcloud'
 
 # Rewards
 
-# feeds.rewards.on 'data', (reward) ->
-#   io.of("/users/#{reward.user}").emit 'reward', reward
+expose require('./game/reward').all()
 
+# Mocks
+
+if conf.env == 'development'
+  mock =
+    feed: require './providers/mock/feed'
+    harvest: require './providers/mock/harvest'
+  expose feed for _, feed of mock.feed.user 'jessethegame'
+  app.use '/mock', mock.harvest.stories
+  app.use '/mock', mock.harvest.rewards
