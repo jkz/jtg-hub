@@ -5,12 +5,12 @@ io      = require('socket.io').listen server
 request = require('request')
 feeds   = require('feeds')
 jwt     = require('jwt-simple')
-
+url     = require('url')
 bodyParser = require('body-parser')
 
-app.use bodyParser.json()
-
 conf = require './conf'
+
+app.use bodyParser.json()
 
 port = process.env.PORT ? 8080
 
@@ -28,7 +28,15 @@ anonymous =
 
 # Allow multiple socket.io instances to be synced
 ioRedis = require 'socket.io-redis'
-io.adapter ioRedis conf.redis.url
+redis = require 'socket.io-redis/node_modules/redis'
+
+redisUrl = url.parse(conf.redis.url)
+client = redis.createClient redisUrl.port, redisUrl.hostname, no_ready_check: true
+if redisUrl.auth
+  client.auth redisUrl.auth.split(':')[1]
+io.adapter ioRedis
+  pubClient: client
+  subClient: client
 
 # Add urls
 routize = (feed) ->
