@@ -201,8 +201,8 @@ expose feed for _, feed of require('./game/feed').host()
 harvest = require './game/harvest'
 
 harvest 'github'
-harvest 'twitter'
-harvest 'soundcloud'
+# harvest 'twitter'
+# harvest 'soundcloud'
 
 # Rewards
 
