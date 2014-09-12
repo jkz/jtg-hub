@@ -8,6 +8,8 @@ module.exports = conf =
   jwt:
     secret: process.env.JWT_SECRET
     algorithm: process.env.JWT_ALGORITHM
+    # To make authorized calls to the api
+    token: process.env.JWT_TOKEN
 
   providers: ['github', 'twitter', 'soundcloud']
 
